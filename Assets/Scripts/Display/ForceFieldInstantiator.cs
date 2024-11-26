@@ -1,3 +1,4 @@
+using System;
 using System.Collections;
 using System.Collections.Generic;
 using Unity.VisualScripting;
@@ -5,12 +6,13 @@ using UnityEngine;
 
 public class ForceFieldInstantiator : MonoBehaviour
 {
-    private enum InvincibleForceFieldType
+    public enum InvincibleForceFieldType
     {
         Top,
         Right,
         Bottom,
-        Left
+        Left,
+        Middle
     }
 
     [SerializeField] private GameObject invincibleForceFieldSample;
@@ -19,7 +21,7 @@ public class ForceFieldInstantiator : MonoBehaviour
     [SerializeField] private Vector3 rightInvincibleForceFieldPosition  = new Vector3(1f, 0.5f, 1f);
     [SerializeField] private Vector3 topInvincibleForceFieldPosition    = new Vector3(0.5f, 1, 1f);
     [SerializeField] private Vector3 bottomInvincibleForceFieldPosition = new Vector3(0.5f, 0, 1f);
-
+    [SerializeField] private Vector3 middleInvincibleForceFieldPosition = new Vector3(0.5f, 0.5f, 1f);
 
     private GameObject leftInvincibleForceField;
     private Renderer leftinvincibleForceFieldRenderer;
@@ -33,21 +35,37 @@ public class ForceFieldInstantiator : MonoBehaviour
     private GameObject bottomInvincibleForceField;
     private Renderer bottomInvincibleForceFieldRenderer;
 
+    private GameObject middleInvincibleForceField;
+    private Renderer middleInvincibleForceFieldRenderer;
+
     private Camera mainCamera;
 
     private Dictionary<InvincibleForceFieldType, Vector3> invincibleForceFieldPositions;
 
+    private int lastScreenWidth;
+
     void Start()
     {
-        leftInvincibleForceField    = Instantiate(invincibleForceFieldSample);
-        rightInvincibleForceField   = Instantiate(invincibleForceFieldSample);
-        topInvincibleForceField     = Instantiate(invincibleForceFieldSample);
-        bottomInvincibleForceField  = Instantiate(invincibleForceFieldSample);
+        leftInvincibleForceField        = Instantiate(invincibleForceFieldSample);
+        leftInvincibleForceField.name   = "Left Invincible Force Field";
+
+        rightInvincibleForceField       = Instantiate(invincibleForceFieldSample);
+        rightInvincibleForceField.name  = "Right Invincible Force Field";
+
+        topInvincibleForceField         = Instantiate(invincibleForceFieldSample);
+        topInvincibleForceField.name    = "Top Invincible Force Field";
+
+        bottomInvincibleForceField      = Instantiate(invincibleForceFieldSample);
+        bottomInvincibleForceField.name = "Bottom Invincible Force Field";
+
+        middleInvincibleForceField      = Instantiate(invincibleForceFieldSample);
+        middleInvincibleForceField.name = "Middle Invincible Force Field";
 
         leftinvincibleForceFieldRenderer    = leftInvincibleForceField.GetComponent<Renderer>();
         rightInvincibleForceFieldRenderer   = rightInvincibleForceField.GetComponent<Renderer>();
         topInvincibleForceFieldRenderer     = topInvincibleForceField.GetComponent<Renderer>();
         bottomInvincibleForceFieldRenderer  = bottomInvincibleForceField.GetComponent<Renderer>();
+        middleInvincibleForceFieldRenderer  = middleInvincibleForceField.GetComponent<Renderer>();
 
         mainCamera = Camera.main;
 
@@ -60,23 +78,16 @@ public class ForceFieldInstantiator : MonoBehaviour
         calculateInvincibleForceFieldPostions();
     }
 
-    private void calculateInvincibleForceFieldPostions()
+    public void calculateInvincibleForceFieldPostions()
     {
-        /** 
-         * Remove this part pre production 
-         * -------
-        **/
         invincibleForceFieldPositions = new Dictionary<InvincibleForceFieldType, Vector3>
         {
             [InvincibleForceFieldType.Top] = topInvincibleForceFieldPosition,
             [InvincibleForceFieldType.Right] = rightInvincibleForceFieldPosition,
             [InvincibleForceFieldType.Bottom] = bottomInvincibleForceFieldPosition,
-            [InvincibleForceFieldType.Left] = leftInvincibleForceFieldPosition
+            [InvincibleForceFieldType.Left] = leftInvincibleForceFieldPosition,
+            [InvincibleForceFieldType.Middle] = middleInvincibleForceFieldPosition
         };
-        /** 
-         * -------
-         * Remove this part pre production 
-        **/
 
         setupInvincibleForceField(
             topInvincibleForceField,
@@ -101,6 +112,14 @@ public class ForceFieldInstantiator : MonoBehaviour
             leftinvincibleForceFieldRenderer, 
             InvincibleForceFieldType.Left
         );
+
+        setupInvincibleForceField(
+            middleInvincibleForceField,
+            middleInvincibleForceFieldRenderer,
+            InvincibleForceFieldType.Middle
+        );
+
+        lastScreenWidth = Screen.width;
     }
 
     private void setupInvincibleForceField(GameObject invincibleForceField, Renderer invincibleForceFieldRenderer, InvincibleForceFieldType type)
@@ -127,9 +146,11 @@ public class ForceFieldInstantiator : MonoBehaviour
             {
                 newPosition.x += halfWidth;
             }
+
+            setHeightForLeftAndReightForces(invincibleForceField, invincibleForceFieldRenderer, .01f);
         }
 
-        if (type == InvincibleForceFieldType.Top || type == InvincibleForceFieldType.Bottom)
+        if (type == InvincibleForceFieldType.Top || type == InvincibleForceFieldType.Bottom || type == InvincibleForceFieldType.Middle)
         {
             if (newPosition.y >= 0)
             {
@@ -139,10 +160,39 @@ public class ForceFieldInstantiator : MonoBehaviour
             {
                 newPosition.y += halfHeight;
             }
-        }
 
+            setWidthForTopAndBottomForces(invincibleForceField, invincibleForceFieldRenderer, .01f);
+        }
 
         invincibleForceField.transform.position = newPosition;
         invincibleForceField.SetActive(true);
+    }
+
+    public void setHeightForLeftAndReightForces(GameObject invincibleForceField, Renderer invincibleForceFieldRenderer, float width){
+        float cameraHeight = mainCamera.orthographicSize * 2f;
+
+        Vector2 spriteSize = invincibleForceFieldRenderer.bounds.size;
+
+        //float heightScale = cameraHeight / spriteSize.y;
+        //float widthScale = width / spriteSize.x;
+        float heightScale = cameraHeight;
+        float widthScale = width;
+
+        invincibleForceField.transform.localScale = new Vector2(widthScale, heightScale);
+    }
+
+    public void setWidthForTopAndBottomForces(GameObject invincibleForceField, Renderer invincibleForceFieldRenderer, float height)
+    {
+        // Get the orthographic size of the camera
+        float orthographicSize = mainCamera.orthographicSize;
+
+        // Calculate the aspect ratio (screen width / screen height)
+        float aspectRatio = (float) Screen.width / Screen.height;
+
+        // Calculate the camera width
+        float cameraWidth = 2 * orthographicSize * aspectRatio;
+        float heightScale = height;
+
+        invincibleForceField.transform.localScale = new Vector2(cameraWidth, heightScale);
     }
 }

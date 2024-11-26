@@ -248,6 +248,7 @@ MonoBehaviour:
   rightInvincibleForceFieldPosition: {x: 1, y: 0.5, z: 1}
   topInvincibleForceFieldPosition: {x: 0.5, y: 1, z: 1}
   bottomInvincibleForceFieldPosition: {x: 0.5, y: 0, z: 1}
+  middleInvincibleForceFieldPosition: {x: 0.5, y: 0.5, z: 1}
 --- !u!4 &994267211
 Transform:
   m_ObjectHideFlags: 0
