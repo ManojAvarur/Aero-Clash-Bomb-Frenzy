@@ -4,7 +4,8 @@ using UnityEngine;
 
 public class HealthDataStore
 {
-    private static HealthDataStore _HealthDataStore;
+    private static Dictionary<string, HealthDataStore> healthDataStoreForAll = new Dictionary<string, HealthDataStore>();
+
     private int _currentHealth;
     private bool _isPlayerDead;
     private int _minHealth = 1;
@@ -12,16 +13,16 @@ public class HealthDataStore
     private int _defaultHealthDamageWorth = 2;
     private int _defaultHealthRestoreWorth = 2;
 
-    public static HealthDataStore getInstance()
+    public static HealthDataStore getInstance(string type)
     {
-        if (_HealthDataStore == null)
+        if (healthDataStoreForAll.ContainsKey(type))
         {
-            _HealthDataStore = new HealthDataStore();
-            _HealthDataStore.init();
-
+            return healthDataStoreForAll[type];
         }
 
-        return _HealthDataStore;
+        healthDataStoreForAll[type] = new HealthDataStore();
+
+        return healthDataStoreForAll[type];
     }
 
     private void init()

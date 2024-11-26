@@ -67,6 +67,15 @@ public class ForceFieldInstantiator : MonoBehaviour
         bottomInvincibleForceFieldRenderer  = bottomInvincibleForceField.GetComponent<Renderer>();
         middleInvincibleForceFieldRenderer  = middleInvincibleForceField.GetComponent<Renderer>();
 
+        invincibleForceFieldPositions = new Dictionary<InvincibleForceFieldType, Vector3>
+        {
+            [InvincibleForceFieldType.Top] = topInvincibleForceFieldPosition,
+            [InvincibleForceFieldType.Right] = rightInvincibleForceFieldPosition,
+            [InvincibleForceFieldType.Bottom] = bottomInvincibleForceFieldPosition,
+            [InvincibleForceFieldType.Left] = leftInvincibleForceFieldPosition,
+            [InvincibleForceFieldType.Middle] = middleInvincibleForceFieldPosition
+        };
+
         mainCamera = Camera.main;
 
         calculateInvincibleForceFieldPostions();
@@ -80,15 +89,6 @@ public class ForceFieldInstantiator : MonoBehaviour
 
     public void calculateInvincibleForceFieldPostions()
     {
-        invincibleForceFieldPositions = new Dictionary<InvincibleForceFieldType, Vector3>
-        {
-            [InvincibleForceFieldType.Top] = topInvincibleForceFieldPosition,
-            [InvincibleForceFieldType.Right] = rightInvincibleForceFieldPosition,
-            [InvincibleForceFieldType.Bottom] = bottomInvincibleForceFieldPosition,
-            [InvincibleForceFieldType.Left] = leftInvincibleForceFieldPosition,
-            [InvincibleForceFieldType.Middle] = middleInvincibleForceFieldPosition
-        };
-
         setupInvincibleForceField(
             topInvincibleForceField,
             topInvincibleForceFieldRenderer,
@@ -118,8 +118,6 @@ public class ForceFieldInstantiator : MonoBehaviour
             middleInvincibleForceFieldRenderer,
             InvincibleForceFieldType.Middle
         );
-
-        lastScreenWidth = Screen.width;
     }
 
     private void setupInvincibleForceField(GameObject invincibleForceField, Renderer invincibleForceFieldRenderer, InvincibleForceFieldType type)
