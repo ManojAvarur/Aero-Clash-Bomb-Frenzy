@@ -29,9 +29,17 @@ public class NPCRandomMovement : MonoBehaviour
     [Tooltip("Should movement be completely random or smoother")]
     public bool smoothMovement = true;
 
+    [Header("Bullet Controller")]
+    [SerializeField] private GameObject bullet;
+    [SerializeField] private float minfireRate = 0.3f; // How often the player can shoot
+    [SerializeField] private float maxfireRate = 0.7f; // How often the player can shoot
+    private float nextFireTime = 0f;
+
     private Rigidbody2D rb;
     private Vector2 targetPosition;
     private float targetChangeTimer;
+    private SpriteRenderer spriteRenderer;
+    System.Random random;
 
     void Start()
     {
@@ -42,6 +50,10 @@ public class NPCRandomMovement : MonoBehaviour
             rb = gameObject.AddComponent<Rigidbody2D>();
         }
 
+        spriteRenderer = GetComponent<SpriteRenderer>();
+
+        
+
         // Configure Rigidbody2D for smooth movement
         rb.gravityScale = 0; // Disable gravity
         rb.collisionDetectionMode = CollisionDetectionMode2D.Continuous;
@@ -49,6 +61,10 @@ public class NPCRandomMovement : MonoBehaviour
 
         // Set initial random target
         SetRandomTarget();
+
+        spriteRenderer.color = HealthDataStore.getInstance(gameObject.name).getHealthColor();
+
+        random = new();
     }
 
     void FixedUpdate()
@@ -65,6 +81,9 @@ public class NPCRandomMovement : MonoBehaviour
 
         // Move towards the current target
         MoveTowardsTarget();
+        FireBullet();
+
+        spriteRenderer.color = HealthDataStore.getInstance(gameObject.name).getHealthColor();
     }
 
     void SetRandomTarget()
@@ -119,132 +138,27 @@ public class NPCRandomMovement : MonoBehaviour
 
         // Draw current target
         Gizmos.color = Color.red;
-        Gizmos.DrawWireSphere(targetPosition, 0.5f);
+        //Gizmos.DrawWireSphere(targetPosition, 0.5f);
+    }
+
+    void FireBullet()
+    {
+        if (Time.time <= 2 || Time.time < nextFireTime)
+        {
+            return;
+        }
+
+        Vector3 spawnPosition = gameObject.transform.position - new Vector3(0, .7f, 0);
+
+        GameObject newBullet = Instantiate(bullet, spawnPosition, gameObject.transform.rotation);
+        newBullet.name = gameObject.name + "'s Bullet";
+
+        Bullet bulletClass = newBullet.GetComponent<Bullet>();
+
+        bulletClass.setBulletFrom(gameObject.name);
+        bulletClass.setBulletDirection(Vector2.up);
+        newBullet.SetActive(true);
+
+        nextFireTime = Time.time + 1f / (float) System.Math.Round(random.NextDouble() * (maxfireRate - minfireRate) + minfireRate, 1);
     }
 }
-
-
-//public class NPCRandomMovement : MonoBehaviour
-//{
-//       [Header("Movement Parameters")]
-//    [Tooltip("Maximum movement speed")]
-//    public float maxSpeed = 10f;
-
-//    [Tooltip("Acceleration force")]
-//    public float accelerationForce = 10f;
-
-//    [Tooltip("Time between target changes")]
-//    public float targetChangeInterval = 5f;
-
-//    [Header("Movement Boundaries")]
-//    [Tooltip("Minimum X boundary")]
-//    public float minX = -10f;
-
-//    [Tooltip("Maximum X boundary")]
-//    public float maxX = 10f;
-
-//    [Tooltip("Minimum Y boundary")]
-//    public float minY = -10f;
-
-//    [Tooltip("Maximum Y boundary")]
-//    public float maxY = 10f;
-
-//    [Header("Physics Control")]
-//    private Rigidbody2D rb;
-//    private Vector3 targetPosition;
-//    private float targetChangeTimer;
-
-//    void Start()
-//    {
-//        // Get or add Rigidbody
-//        rb = GetComponent<Rigidbody2D>();
-
-
-//        if (rb == null)
-//        {
-//            rb = gameObject.GetComponent<Rigidbody2D>();
-//        }
-
-
-//        if (rb == null)
-//        Debug.LogError(rb);
-
-//        // Freeze rotation to prevent unwanted tilting
-//        rb.freezeRotation = true;
-
-//        // Set initial random target
-//        SetRandomTarget();
-//    }
-
-//    void FixedUpdate()
-//    {
-//        // Update target change timer
-//        targetChangeTimer += Time.fixedDeltaTime;
-
-//        // Check if it's time to change target
-//        if (targetChangeTimer >= targetChangeInterval)
-//        {
-//            SetRandomTarget();
-//            targetChangeTimer = 0f;
-//        }
-
-//        // Move towards the current target
-//        MoveTowardsTarget();
-//    }
-
-//    void SetRandomTarget()
-//    {
-//        // Generate a random target within specified boundaries
-//        targetPosition = new Vector3(
-//            Random.Range(minX, maxX),
-//            Random.Range(minY, maxY), // Keep same Y position
-//            transform.position.z
-//        );
-//    }
-
-//    void MoveTowardsTarget()
-//    {
-//        // Calculate direction to the target
-//        Vector3 directionToTarget = (targetPosition - transform.position).normalized;
-        
-//        // Calculate distance to target
-//        float distanceToTarget = Vector3.Distance(transform.position, targetPosition);
-
-//        // If very close to target, set a new random target
-//        if (distanceToTarget < 0.5f)
-//        {
-//            SetRandomTarget();
-//            return;
-//        }
-
-//        // Calculate desired velocity
-//        Vector3 desiredVelocity = directionToTarget * maxSpeed;
-
-//        // Calculate steering force
-//        Vector3 steeringForce = desiredVelocity - rb.velocity;
-
-//        // Apply acceleration based on proximity to target
-//        float accelerationMultiplier = Mathf.Clamp01(distanceToTarget / 5f);
-        
-//        // Apply force for smooth movement
-//        rb.AddForce(steeringForce * accelerationForce * accelerationMultiplier, ForceMode.Acceleration);
-
-//        // Add slight drag near destination to prevent overshooting
-//        rb.drag = distanceToTarget < 2f ? 5f : 0f;
-//    }
-
-//    // Visualize movement boundaries and current target in Scene view
-//    void OnDrawGizmosSelected()
-//    {
-//        // Draw movement boundaries
-//        Gizmos.color = Color.green;
-//        Gizmos.DrawWireCube(
-//            new Vector3((minX + maxX) / 2, (minY + maxY) / 2, transform.position.z), 
-//            new Vector3(maxX - minX, maxY - minY, 0.1f)
-//        );
-
-//        // Draw current target
-//        Gizmos.color = Color.red;
-//        Gizmos.DrawWireSphere(targetPosition, 0.5f);
-//    }
-//}
